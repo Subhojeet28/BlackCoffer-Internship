@@ -1,0 +1,373 @@
+import os
+import pandas as pd
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.tokenize import word_tokenize
+from nltk.corpus import cmudict
+
+
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+# Load the output structure file
+output_df = pd.read_excel(r'C:\Users\Subhojeet Dutta\Downloads\Output Data Structure.xlsx')
+
+# Specify the path to the directory containing the article files
+article_files_directory = r'C:\Users\Subhojeet Dutta\201910325\URL_ID'
+
+# Define functions for computing variables
+def compute_word_count(text):
+    tokens = word_tokenize(text)
+    return len(tokens)
+
+def compute_sentence_count(text):
+    sentences = sent_tokenize(text)
+    return len(sentences)
+
+def compute_average_word_length(text):
+    tokens = word_tokenize(text)
+    word_lengths = [len(token) for token in tokens]
+    if len(word_lengths) > 0:
+        return sum(word_lengths) / len(word_lengths)
+    else:
+        return 0.0
+
+def compute_stopword_count(text):
+    stop_words = set(stopwords.words('english'))
+    tokens = word_tokenize(text)
+    stopword_count = sum(1 for token in tokens if token.lower() in stop_words)
+    return stopword_count
+
+def compute_lemmatized_text(text):
+    lemmatizer = WordNetLemmatizer()
+    tokens = word_tokenize(text)
+    lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
+    return ' '.join(lemmatized_tokens)
+
+# Define placeholder functions for computing additional variables
+# Replace these functions with your custom implementations
+
+def compute_url(text):
+    # Assuming the URL is the first occurrence of 'http://' or 'https://'
+    start_index = text.find('http://')
+    if start_index == -1:
+        start_index = text.find('https://')
+
+    if start_index != -1:
+        end_index = text.find(' ', start_index)
+        if end_index == -1:
+            end_index = len(text)
+
+        url = text[start_index:end_index]
+        return url
+    else:
+        return "URL not found"
+
+
+    #return "URL computation not implemented"
+
+def compute_positive_score(text):
+    
+    # Compute the positive score based on the provided positive words
+    positive_words = ['good', 'great', 'excellent', 'awesome', 'fantastic', 'amazing']
+    tokenized_text = word_tokenize(text.lower())
+    positive_count = sum(1 for token in tokenized_text if token in positive_words)
+
+    positive_score = positive_count / len(tokenized_text) if len(tokenized_text) > 0 else 0.0
+    
+    return positive_score
+
+    
+    #return "Positive score computation not implemented"
+
+def compute_negative_score(text):
+    # Compute the negative score based on the provided negative words
+    negative_words = ['bad', 'terrible', 'awful', 'horrible', 'negative']
+    tokenized_text = word_tokenize(text.lower())
+    negative_count = sum(1 for token in tokenized_text if token in negative_words)
+
+    return negative_count
+
+    
+    #return "Negative score computation not implemented"
+
+def compute_polarity_score(text):
+    # Compute the polarity score based on the provided positive and negative words
+    tokenized_text = word_tokenize(text.lower())
+    positive_count = sum(1 for token in tokenized_text if token in positive_words)
+    negative_count = sum(1 for token in tokenized_text if token in negative_words)
+
+    polarity_score = (positive_count - negative_count) / (positive_count + negative_count + 1e-7)
+    return polarity_score
+
+    
+    #return "Polarity score computation not implemented"
+
+def compute_subjectivity_score(text):
+    # Create a TextBlob object
+    blob = TextBlob(text)
+
+    # Compute the subjectivity score
+    subjectivity_score = blob.sentiment.subjectivity
+
+    return subjectivity_score
+    #return "Subjectivity score computation not implemented"
+
+def compute_avg_sentence_length(text):
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Calculate the total number of sentences
+    total_sentences = len(sentences)
+
+    # Calculate the total number of words across all sentences
+    total_words = sum(len(word_tokenize(sentence)) for sentence in sentences)
+
+    # Calculate the average sentence length
+    if total_sentences > 0:
+        avg_sentence_length = total_words / total_sentences
+    else:
+        avg_sentence_length = 0
+
+    return avg_sentence_length
+    
+    
+    #return "Average sentence length computation not implemented"
+
+def compute_percentage_of_complex_word(text):
+     # Tokenize the text into words
+    words = word_tokenize(text)
+
+    # Define your criteria for identifying complex words
+    complex_words = set(['complex', 'word', 'example'])  # Replace with your own criteria
+
+    # Count the number of complex words
+    complex_word_count = sum(1 for word in words if word.lower() in complex_words)
+
+    # Calculate the percentage of complex words
+    total_words = len(words)
+    if total_words > 0:
+        percentage_complex_words = (complex_word_count / total_words) * 100
+    else:
+        percentage_complex_words = 0
+
+    return percentage_complex_words
+    
+   # return "Percentage of complex words computation not implemented"
+
+def compute_fog_index(text):
+    
+        # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Tokenize each sentence into words
+    words = [word_tokenize(sentence) for sentence in sentences]
+
+    # Calculate the average number of words per sentence
+    total_sentences = len(sentences)
+    total_words = sum(len(sentence) for sentence in words)
+    if total_sentences > 0:
+        average_words_per_sentence = total_words / total_sentences
+    else:
+        average_words_per_sentence = 0
+
+    # Count the number of complex words
+    complex_word_count = sum(1 for sentence in words for word in sentence if word.lower() in complex_words)
+
+    # Calculate the percentage of complex words
+    if total_words > 0:
+        percentage_complex_words = (complex_word_count / total_words) * 100
+    else:
+        percentage_complex_words = 0
+
+    # Calculate the fog index
+    fog_index = 0.4 * (average_words_per_sentence + percentage_complex_words)
+
+    return fog_index
+
+   # return "FOG index computation not implemented"
+
+def compute_avg_number_of_words_per_sentence(text):
+    
+        # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Tokenize each sentence into words
+    words = [word_tokenize(sentence) for sentence in sentences]
+
+    # Calculate the total number of words and sentences
+    total_words = sum(len(sentence) for sentence in words)
+    total_sentences = len(sentences)
+
+    # Calculate the average number of words per sentence
+    if total_sentences > 0:
+        avg_words_per_sentence = total_words / total_sentences
+    else:
+        avg_words_per_sentence = 0
+
+    return avg_words_per_sentence
+   # return "Average number of words per sentence computation not implemented"
+
+def compute_complex_word_count(text):
+        # Define a dictionary of complex words specific to each URL
+    complex_words = {
+        'url1': ['complex_word1', 'complex_word2'],
+        'url2': ['complex_word3', 'complex_word4'],
+        'url3': ['complex_word5', 'complex_word6']
+        # Add more URLs and their respective complex words
+    }
+
+    # Fetch the complex words for the given URL
+    url_complex_words = complex_words.get(url, [])
+
+    # Compute the count of complex words for the fetched URL
+    complex_word_count = 0
+    if url_complex_words:
+        # Tokenize the URL into words
+        tokens = word_tokenize(url)
+
+        # Count the number of complex words
+        complex_word_count = sum(1 for token in tokens if token.lower() in url_complex_words)
+
+    return complex_word_count
+    
+    
+    #return "Complex word count computation not implemented"
+
+def compute_syllable_per_word(text):
+        # Tokenize the text into words
+    tokens = word_tokenize(text)
+
+    # Load the CMU Pronouncing Dictionary
+    cmu_dict = cmudict.dict()
+
+    # Count the number of syllables for each word
+    total_syllables = 0
+    total_words = 0
+    for token in tokens:
+        # Convert the word to lowercase
+        word = token.lower()
+
+        # Check if the word is in the CMU Pronouncing Dictionary
+        if word in cmu_dict:
+            # Fetch the pronunciation for the word
+            pronunciation = cmu_dict[word][0]
+
+            # Count the number of syllables in the pronunciation
+            syllable_count = sum(1 for phoneme in pronunciation if phoneme[-1].isdigit())
+
+            # Increment the total syllable count
+            total_syllables += syllable_count
+
+            # Increment the total word count
+            total_words += 1
+
+    # Calculate the average number of syllables per word
+    if total_words > 0:
+        avg_syllables_per_word = total_syllables / total_words
+    else:
+        avg_syllables_per_word = 0
+
+    return avg_syllables_per_word
+   # return "Syllable per word computation not implemented"
+
+def compute_personal_pronoun(text):
+    
+    personal_pronouns = ['I', 'me', 'my', 'mine', 'we', 'us', 'our', 'ours', 'you', 'your', 'yours', 'he', 'him', 'his',
+                         'she', 'her', 'hers', 'it', 'its', 'they', 'them', 'their', 'theirs']
+
+    # Tokenize the text into words
+    tokens = word_tokenize(text)
+
+    # Count the occurrences of personal pronouns
+    personal_pronoun_count = sum(1 for token in tokens if token.lower() in personal_pronouns)
+
+    return personal_pronoun_count
+    #return "Personal pronouns computation not implemented"
+
+def compute_avg_word_length(text):
+    
+    # Tokenize the text into words
+    tokens = word_tokenize(text)
+
+    # Calculate the total word length
+    total_word_length = sum(len(token) for token in tokens)
+
+    # Calculate the average word length
+    if len(tokens) > 0:
+        avg_word_length = total_word_length / len(tokens)
+    else:
+        avg_word_length = 0.0
+
+    return avg_word_length
+
+    #return "Average word length computation not implemented"
+
+# Iterate over the extracted article texts and compute variables
+results = []
+for index, row in output_df.iterrows():
+    url_id = row['URL_ID']
+    article_file_name = f'{url_id}.txt'
+    article_file_path = os.path.join(article_files_directory, article_file_name)
+
+    try:
+        # Check if the article file exists
+        if not os.path.exists(article_file_path):
+            raise FileNotFoundError(f"File not found for article with URL_ID {url_id}.")
+
+        # Read the extracted article text from the file
+        with open(article_file_path, 'r', encoding='utf-8') as file:
+            article_text = file.read()
+
+        # Compute variables
+        url = compute_url(article_text)
+        #positive_score = compute_positive_score(article_text)
+        #positive_words = ['good', 'great', 'excellent', 'awesome', 'fantastic', 'amazing']
+        positive_score = compute_positive_score(article_text, positive_words)
+        negative_score = compute_negative_score(article_text)
+        polarity_score = compute_polarity_score(article_text)
+        subjectivity_score = compute_subjectivity_score(article_text)
+        avg_sentence_length = compute_avg_sentence_length(article_text)
+        percentage_of_complex_words = compute_percentage_of_complex_word(article_text)
+        fog_index = compute_fog_index(article_text,complex_words)
+        avg_number_of_words_per_sentence = compute_avg_number_of_words_per_sentence(article_text)
+        complex_word_count = compute_complex_word_count(article_text)
+        word_count = compute_word_count(article_text)
+        syllable_per_word = compute_syllable_per_word(article_text)
+        personal_pronouns = compute_personal_pronoun(article_text)
+        avg_word_length = compute_avg_word_length(article_text)
+
+        # Append the results as a dictionary
+        results.append({
+            'URL_ID': url_id,
+            'URL': url,
+            'Positive Score': positive_score,
+            'Negative Score': negative_score,
+            'Polarity Score': polarity_score,
+            'Subjectivity Score': subjectivity_score,
+            'Avg Sentence Length': avg_sentence_length,
+            'Percentage of Complex Words': percentage_of_complex_words,
+            'FOG Index': fog_index,
+            'Avg Number of Words per Sentence': avg_number_of_words_per_sentence,
+            'Complex Word Count': complex_word_count,
+            'Word Count': word_count,
+            'Syllable per Word': syllable_per_word,
+            'Personal Pronouns': personal_pronouns,
+            'Avg Word Length': avg_word_length
+        })
+
+        print(f"Variables computed for article with URL_ID {url_id}.")
+    except FileNotFoundError as e:
+        print(str(e))
+    except Exception as ex:
+        print(f"Error occurred while processing article with URL_ID {url_id}: {ex}")
+
+# Convert the results to a DataFrame
+output_results_df = pd.DataFrame(results)
+
+# Save the results to the output Excel file
+output_results_df.to_excel(r'C:\Users\Subhojeet Dutta\Downloads\Output Data.xlsx', index=False)
